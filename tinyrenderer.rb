@@ -1,4 +1,5 @@
 require 'matrix'
+require 'ruby-prof'
 
 class MutableMatrix < Matrix
   def []=(x, y, val)
@@ -21,9 +22,9 @@ RED 	= [255, 0,   0,   1]
 WHITE	= [255, 255, 255, 1]
 
 # funcs
-def draw(buffer)
+def draw(buffer, out_file)
   require 'pixels'
-  out = Pixels.create_tga("out.tga", {
+  out = Pixels.create_tga(out_file, {
     width: buffer.column_size,
     height: buffer.row_size,
     color_depth: 24,
@@ -35,22 +36,37 @@ def draw(buffer)
   out.close
 end
 
-def line(buffer, p0, p1, color)
-  t = 0.0
-  while t < 1.0 do
-    x = (p0[:x]*((1.0 - t)) + p1[:x]*t).to_int
-    y = (p0[:y]*((1.0 - t)) + p1[:y]*t).to_int
-    buffer[x, y] = color
-    t = (t + 0.01).round(2)
+def line(buffer, x0, y0, x1, y1, color)
+  steep = false
+  if (x0-x1).abs < (y0-y1).abs # mark steep
+    x0, y0 = y0, x0
+    x1, y1 = y1, x1
+    steep = true
+  end
+
+  if x0 > x1 # draw from left to right
+    x0, x1 = x1, x0
+    y0, y1 = y1, y0
+  end
+
+  x = x0
+  while x <= x1 do
+    t = (x - x0)/(x1-x0).to_f
+    y = ((y0 * (1.0 - t)) + (y1 * t)).round
+    if steep
+      buffer[y, x] = color
+    else
+      buffer[x, y] = color
+    end
+    x += 1
   end
 end
 
-# start
 buffer = MutableMatrix.build(OUT_H, OUT_W) { BLACK }
 
-line(buffer, {x: 13, y: 20}, {x: 80, y: 40}, WHITE)
-line(buffer, {x: 20, y: 13}, {x: 40, y: 80}, RED)
+line(buffer, 0, 99, 99, 0, WHITE)
+line(buffer, 25, 26, 77, 82, RED)
 
 buffer.flip_vertically # i want to have the origin at the left bottom corner of the image
 
-draw buffer
+draw buffer, 'out.tga'
