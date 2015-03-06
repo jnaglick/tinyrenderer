@@ -16,7 +16,7 @@ end
 OUT_W 	= 100
 OUT_H 	= 100
 
-BLACK 	= [0,   0,   0,   1]
+BLACK = [0,   0,   0,   1]
 RED 	= [255, 0,   0,   1]
 WHITE	= [255, 255, 255, 1]
 
@@ -35,10 +35,21 @@ def draw(buffer)
   out.close
 end
 
+def line(buffer, p0, p1, color)
+  t = 0.0
+  while t < 1.0 do
+    x = (p0[:x]*((1.0 - t)) + p1[:x]*t).to_int
+    y = (p0[:y]*((1.0 - t)) + p1[:y]*t).to_int
+    buffer[x, y] = color
+    t = (t + 0.01).round(2)
+  end
+end
+
 # start
 buffer = MutableMatrix.build(OUT_H, OUT_W) { BLACK }
 
-buffer[52, 41] = RED
+line(buffer, {x: 13, y: 20}, {x: 80, y: 40}, WHITE)
+line(buffer, {x: 20, y: 13}, {x: 40, y: 80}, RED)
 
 buffer.flip_vertically # i want to have the origin at the left bottom corner of the image
 
